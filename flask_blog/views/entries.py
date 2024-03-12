@@ -1,6 +1,7 @@
 from flask import request, redirect, url_for, render_template, flash, session
 from flask_blog import app
 from datetime import datetime
+import os
 
 
 @app.route('/')
@@ -31,8 +32,8 @@ def add_entry():
 
 @app.route('/entries/new', methods=['GET'])
 def new_entry():
-    # 記事の入力フォームを表示
-    return '記事の入力フォームを表示'
+    print(os.listdir())
+    return render_template('entries/new.html')
 
 @app.route('/entries/<int:id>', methods=['GET'])
 def show_entry(id):
