@@ -1,78 +1,57 @@
 from flask import request, redirect, url_for, render_template, flash, session
 from flask_blog import app
+from flask_blog.models.entries import Entry
 from datetime import datetime
 import os
 
 
 @app.route('/')
 def show_entries():
-    # 仮の記事データを取得
-    entries = [
-        {
-            'id': 1,
-            'title': '初めての投稿',
-            'text': 'はじめての内容',
-            'created_at': datetime.now()
-        }, 
-        {
-            'id': 2,
-            'title': 'ふたつめの投稿',
-            'text': 'ふたつめの内容',
-            'created_at': datetime.now()
-        },
-    ]
+    entries = Entry.scan()
+    entries = sorted(entries, key=lambda x: x.id, reverse=True)
     return render_template('entries/index.html', entries=entries)
 
 
-@app.route('/')
+@app.route('/entries', methods=['POST'])
 def add_entry():
-    # 記事の作成処理を実装
-    return '新しく記事が作成されました'
+    entry = Entry(
+        id=int(datetime.now().timestamp()),
+        title=request.form['title'],
+        text=request.form['text']
+    )
+    entry.save()
+    # redirect(url_for('[リダイレクトしたいURLのメソッド名']))でリダイレクトできる
+    return redirect(url_for('show_entries'))
 
 
 @app.route('/entries/new', methods=['GET'])
 def new_entry():
-    print(os.listdir())
+    # print(os.listdir())
+    # 新規投稿フォームのhtmlファイルを返す
     return render_template('entries/new.html')
 
 @app.route('/entries/<int:id>', methods=['GET'])
 def show_entry(id):
-    entry = {
-        'id' :1,
-        'title': '初めての投稿',
-        'text': 'はじめての内容',
-        'created_at': datetime.now(),
-    }
+    # hash_keyに指定していたidを指定することで、そのidの記事を取得できる
+    entry = Entry.get(id)
+    # 詳細記事を表示するテンプレートshow.htmlを返す
     return render_template('entries/show.html', entry=entry)
 
 @app.route('/entries/<int:id>/edit', methods=['GET'])
 def edit_entry(id):
-    entries = [
-        {
-            'id': 1,
-            'title': '初めての投稿',
-            'text': 'はじめての内容',
-            'created_at': datetime.now()
-        }, 
-        {
-            'id': 2,
-            'title': 'ふたつめの投稿',
-            'text': 'ふたつめの内容',
-            'created_at': datetime.now()
-        },
-    ]
-    entry = None
-    for e in entries:
-        if e['id'] == id:
-            entry = e        
+    entry = Entry.get(id)
     return render_template('entries/edit.html', entry=entry)
 
 @app.route('/entries/<int:id>/update', methods=['POST'])
 def update_entry(id):
-    # 記事の更新処理を実装
-    return f'記事{id}が更新されました'
+    entry = Entry.get(id)
+    entry.title = request.form['title']
+    entry.text = request.form['text']
+    entry.save()
+    return redirect(url_for('show_entries'))
 
 @app.route('/entries/<int:id>/delete', methods=['POST'])
 def delete_entry(id):
-    # 記事の削除処理を実装
-    return f'記事{id}が削除されました'
+    entry = Entry.get(id)
+    entry.delete()
+    return redirect(url_for('show_entries'))
