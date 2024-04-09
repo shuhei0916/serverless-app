@@ -1,8 +1,16 @@
+from flask import request, redirect, url_for, render_template, flash, session
 from flask_blog import app
+from datetime import datetime
 
-@app.route('/')
-def show_entities():
-    return "全ての記事を表示"
+@app.route('/entries/<int:id>', methods=['GET'])
+def show_entities(id):
+    entry = {
+        'id': 1, 
+        'title': '初めての投稿',
+        'text': '初めての内容',
+        'created_at': datetime.now(),
+    }
+    return render_template('entries/show.html', entry=entry)
 
 # @app.route('URL')の形でURLを記載
 # HTTPメソッドはmethodsの中に指定。
